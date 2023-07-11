@@ -9,8 +9,13 @@ const ExpressError = require("./expressError");
 app.use(express.json());
 
 const companiesRoutes = require("./routes/companies");
+const invoicesRoutes = require("./routes/invoices");
+
 // using all the companies routes (companiesRoutes) under the prefix "/companies"
 app.use("/companies", companiesRoutes);
+
+// using all the invoices routes (invoicesRoutes) under the prefix "/invoices"
+app.use("/invoices", invoicesRoutes);
 
 /** 404 handler */
 
@@ -23,11 +28,12 @@ app.use(function (req, res, next) {
 /** general error handler */
 
 app.use((err, req, res, next) => {
-  // oritinal code
+  // original code
   // res.status(err.status || 500);
+
   // return res.json({
   //   error: err,
-  //   message: err.message
+  //   message: err.message,
   // });
 
   // the default status is 500, Internal Server Error
