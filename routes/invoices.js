@@ -145,7 +145,7 @@ router.put("/:id", async (req, res, next) => {
   try {
     // set the id (i.e. 4) found as a parameter in the url (i.e. '/invoices/4') to the variable id
     const { id } = req.params;
-    // set the amt found as content of the request.body to 'amt'
+    // set the amt and paid found as content of the request.body to 'amt' and 'paid'
     const { amt, paid } = req.body;
     // initialize paidDate as null
     let paidDate = null;

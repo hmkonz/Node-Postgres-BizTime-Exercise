@@ -27,122 +27,154 @@ router.get("/", async (req, res, next) => {
  * */
 router.get("/:code", async (req, res, next) => {
   try {
-    // set the code (i.e. apple) found as a parameter in the url (i.e. '/companies/apple') to the variable code
+    // set the code (i.e. apple) found as a parameter in the url (i.e. '/companies/apple') to the variable 'code'
     const { code } = req.params;
 
-    const results = await db.query(
-      `SELECT code,
-              name,
-              description,
-              invoices.id,
-              invoices.comp_code,
-              invoices.amt,
-              invoices.paid,
-              invoices.add_date,
-              invoices.paid_date
-        FROM companies
-        INNER JOIN invoices 
-        ON (companies.code=invoices.comp_code)
-        WHERE code=$1`,
+    // select the code, name and description of a company with a specific code (i.e. apple)
+    const companyResults = await db.query(
+      `SELECT code, name, description FROM companies WHERE code=$1`,
       [code]
     );
 
-    // results.rows = [
-    //   {
-    //     code: 'apple',
-    //     name: 'apple',
-    //     description: 'Maker of OSX.',
-    //     id: 11,
-    //     comp_code: 'apple',
-    //     amt: 100,
-    //     paid: false,
-    //     add_date: 2023-07-10T06:00:00.000Z,
-    //     paid_date: null
-    //   },
-    //   {
-    //     code: 'apple',
-    //     name: 'apple',
-    //     description: 'Maker of OSX.',
-    //     id: 13,
-    //     comp_code: 'apple',
-    //     amt: 3000,
-    //     paid: false,
-    //     add_date: 2023-07-10T06:00:00.000Z,
-    //     paid_date: null
-    //   }
-    // ]
+    // select the id of the invoices associated with the company that has a comp_code that's that same as the code in the query string (i.e. code = apple)
+    const invoiceResults = await db.query(
+      `SELECT id FROM invoices WHERE comp_code=$1`,
+      [code]
+    );
 
-    if (results.rows.length === 0) {
+    if (companyResults.rows.length === 0) {
       throw new ExpressError(`Can't find company with code of ${code}`, 404);
     }
-    // company.invoices should be an array of the invoice ids listed under each company name so need to iterate over each object in result.rows and add each invoice id to invoiceArray
-    invoiceArray = [];
 
-    for (let i = 0; i < results.rows.length; i++) {
-      let data = results.rows[i];
+    const company = companyResults.rows[0];
+    // company = { code: 'apple', name: 'apple', description: 'Maker of OSX.' }
 
-      invoiceArray.push(data.id);
+    const invoices = invoiceResults.rows;
+    // invoices = [ { id: 11 }, { id: 13 }, { id: 21 } ]
 
-      //   This is data: {
-      //     code: 'apple',
-      //     name: 'apple',
-      //     description: 'Maker of OSX.',
-      //     id: 11,
-      //     comp_code: 'apple',
-      //     amt: 100,
-      //     paid: false,
-      //     add_date: 2023-07-10T06:00:00.000Z,
-      //     paid_date: null
-      //   }
+    // interate over the array 'invoices' using 'map' to get an array of invoice ids (invoice.id)
+    company.invoices = invoices.map((invoice) => {
+      return invoice.id;
+    });
+    // company.invoices = [ 11, 13, 21 ]
 
-      //   This is invoiceArray: [ 11 ]
-
-      //   THis is data: {
-      //     code: 'apple',
-      //     name: 'apple',
-      //     description: 'Maker of OSX.',
-      //     id: 13,
-      //     comp_code: 'apple',
-      //     amt: 3000,
-      //     paid: false,
-      //     add_date: 2023-07-10T06:00:00.000Z,
-      //     paid_date: null
-      //   }
-
-      //   This is invoiceArray: [ 11, 13 ]
-
-      company = {
-        code: data.code,
-        name: data.name,
-        description: data.description,
-        invoices: invoiceArray,
-      };
-      // for each iteration:
-      // This is company: {
-      //   code: 'apple',
-      //   name: 'apple',
-      //   description: 'Maker of OSX.',
-      //   invoices: [ 11 ]
-      // }
-      // This is company: {
-      //   code: 'apple',
-      //   name: 'apple',
-      //   description: 'Maker of OSX.',
-      //   invoices: [ 11, 13 ]
-      // }
-    }
-    return res.json({ company: company });
-    // This is company: company
-    // {
-    //   code: 'apple',
-    //   name: 'apple',
-    //   description: 'Maker of OSX.',
-    //   invoices: [ 11, 13 ]
-    // }
+    return res.json(company);
   } catch (err) {
     return next(err);
   }
 });
+
+// OR another way of doing it but longer
+
+// const results = await db.query(
+//   `SELECT code,
+//           name,
+//           description,
+//           invoices.id,
+//           invoices.comp_code,
+//           invoices.amt,
+//           invoices.paid,
+//           invoices.add_date,
+//           invoices.paid_date
+//     FROM companies
+//     INNER JOIN invoices
+//     ON (companies.code=invoices.comp_code)
+//     WHERE code=$1`,
+//   [code]
+// );
+
+// results.rows = [
+//   {
+//     code: 'apple',
+//     name: 'apple',
+//     description: 'Maker of OSX.',
+//     id: 11,
+//     comp_code: 'apple',
+//     amt: 100,
+//     paid: false,
+//     add_date: 2023-07-10T06:00:00.000Z,
+//     paid_date: null
+//   },
+//   {
+//     code: 'apple',
+//     name: 'apple',
+//     description: 'Maker of OSX.',
+//     id: 13,
+//     comp_code: 'apple',
+//     amt: 3000,
+//     paid: false,
+//     add_date: 2023-07-10T06:00:00.000Z,
+//     paid_date: null
+//   }
+// ]
+
+// if (results.rows.length === 0) {
+//   throw new ExpressError(`Can't find company with code of ${code}`, 404);
+// }
+// company.invoices should be an array of the invoice ids listed under each company name so need to iterate over each object in result.rows and add each invoice id to invoiceArray
+// invoiceArray = [];
+
+// for (let i = 0; i < results.rows.length; i++) {
+//   let data = results.rows[i];
+
+//   invoiceArray.push(data.id);
+
+//   This is data: {
+//     code: 'apple',
+//     name: 'apple',
+//     description: 'Maker of OSX.',
+//     id: 11,
+//     comp_code: 'apple',
+//     amt: 100,
+//     paid: false,
+//     add_date: 2023-07-10T06:00:00.000Z,
+//     paid_date: null
+//   }
+
+//   This is invoiceArray: [ 11 ]
+
+//   THis is data: {
+//     code: 'apple',
+//     name: 'apple',
+//     description: 'Maker of OSX.',
+//     id: 13,
+//     comp_code: 'apple',
+//     amt: 3000,
+//     paid: false,
+//     add_date: 2023-07-10T06:00:00.000Z,
+//     paid_date: null
+//   }
+
+//   This is invoiceArray: [ 11, 13 ]
+
+// company = {
+//   code: data.code,
+//   name: data.name,
+//   description: data.description,
+//   invoices: invoiceArray,
+// };
+// for each iteration:
+// This is company: {
+//   code: 'apple',
+//   name: 'apple',
+//   description: 'Maker of OSX.',
+//   invoices: [ 11 ]
+// }
+// This is company: {
+//   code: 'apple',
+//   name: 'apple',
+//   description: 'Maker of OSX.',
+//   invoices: [ 11, 13 ]
+// }
+// }
+// return res.json({ company: company });
+// This is company: company
+// {
+//   code: 'apple',
+//   name: 'apple',
+//   description: 'Maker of OSX.',
+//   invoices: [ 11, 13 ]
+// }
 
 /** POST / => add new company
  *
