@@ -3,7 +3,7 @@ const router = express.Router();
 const ExpressError = require("../expressError");
 const db = require("../db");
 
-// will actually be "/companies" in app.js file when use these routes
+// // will actually be "/companies" in app.js file when use these routes
 
 /** GET / => list of companies.
  *

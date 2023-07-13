@@ -13,12 +13,14 @@ let testInvoice;
 beforeEach(async function () {
   let result = await db.query(
     `INSERT INTO 
-          invoices (comp_code, amt, paid, paid_date) VALUES ('TestCompany', 1000, false, null)
+          invoices (comp_code, amt, paid, paid_date) VALUES ('testCompany', 1000, false, null)
           RETURNING id, comp_code, amt, paid, paid_date`
   );
-
+  
   testInvoice = result.rows[0];
+  
 });
+
 
 // after each test, delete any data created by test
 afterEach(async function () {
@@ -35,5 +37,6 @@ describe("GET /invoices", function () {
   test("Gets a list of 1 invoice", async function () {
     const response = await request(app).get(`/invoices`);
     expect(response.statusCode).toBe(200);
+    // expect(response.body).toEqual({invoices: [testInvoice]})
   });
 });
