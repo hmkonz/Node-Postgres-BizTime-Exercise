@@ -6,11 +6,11 @@ let DB_URL;
 // if running in test "mode", use biztime_test db
 // Need to create both databases!
 
-// if (process.env.NODE_ENV === "test") {
-//   DB_URL = "biztime_test";
-// } else {
-//   DB_URL = "biztime";
-// }
+if (process.env.NODE_ENV === "test") {
+  DB_URL = "biztime_test";
+} else {
+  DB_URL = "biztime";
+}
 
 
 const db = new Client({
