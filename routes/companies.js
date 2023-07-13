@@ -52,12 +52,11 @@ router.get("/:code", async (req, res, next) => {
     const invoices = invoiceResults.rows;
     // invoices = [ { id: 11 }, { id: 13 }, { id: 21 } ]
 
-    // interate over the array 'invoices' using 'map' to get an array of invoice ids (invoice.id)
+    // interate over the array 'invoices' using 'map' to get an array of invoice ids (invoice.id). company.invoices = [ 11, 13, 21 ]
     company.invoices = invoices.map((invoice) => {
       return invoice.id;
     });
-    // company.invoices = [ 11, 13, 21 ]
-
+  
     return res.json(company);
   } catch (err) {
     return next(err);
@@ -207,7 +206,7 @@ router.post("/", async (req, res, next) => {
 
 router.put("/:code", async (req, res, next) => {
   try {
-    // set the code (i.e. apple) found as a parameter in the url (i.e. '/companies/apple') to the variable code
+    // set the code (i.e. apple) found as a parameter in the url (i.e. '/companies/apple') to the variable 'code'
     const { code } = req.params;
     // set the name and description found as content of the request.body to 'name' and 'description'
     const { name, description } = req.body;
