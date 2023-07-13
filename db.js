@@ -17,10 +17,6 @@ const db = new Client({
   connectionString: `postgresql:///${DB_URL}`
   });
 
-// let db = new Client({
-//   host: "/var/run/postgresql",
-//   database: DB_URL,
-// });
 
 db.connect();
 
