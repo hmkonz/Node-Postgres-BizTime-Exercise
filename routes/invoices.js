@@ -12,7 +12,7 @@ const db = require("../db");
  * */
 router.get("/", async (req, res, next) => {
   try {
-    const results = await db.query(`SELECT id, comp_code FROM invoices`);
+    const results = await db.query(`SELECT id, comp_code, amt, paid, paid_date FROM invoices`);
     // results.rows =
     // [
     //   { id: 4, comp_code: 'ibm' },
@@ -25,6 +25,8 @@ router.get("/", async (req, res, next) => {
     return next(err);
   }
 });
+
+
 
 /** GET /[id] => detail on invoice
  *
