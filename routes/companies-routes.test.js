@@ -40,6 +40,7 @@ describe("GET /companies", function () {
     const response = await request(app).get(`/companies`);
 
     expect(response.statusCode).toBe(200);
+    // 'company' contains the data added in beforeEach()
     expect(response.body).toEqual({companies: [company]});
   });
 });
@@ -47,11 +48,14 @@ describe("GET /companies", function () {
 /** GET /companies/[code] - return data about a specific company: `{company: {code, name, description, invoices: [id, ...]}}` */
 describe("GET /companies/:code", () => {
   test("Gets a specific company", async () => {
+    // testCompany contains the code, name AND description of the company added in beforeEach() 
     const response = await request(app).get(`/companies/${testCompany.code}`);
+    // add the property 'invoices' as an empty array to testCompany so structure will be the same as what response.body returns
     const invoiceId = [];
     testCompany.invoices = invoiceId;
 
     expect(response.statusCode).toEqual(200);
+    // the response.body includes 'description' so need to compare against testCompany which includes 'description' as well invoice as an empty array so needed to add an empty array to testCompany
     expect(response.body).toEqual({company: testCompany});
    });
  });
@@ -59,6 +63,7 @@ describe("GET /companies/:code", () => {
  /** POST /companies - create company from data; return '{company: {code, name, description}}' */
 describe ("POST /companies", () => {
   test("Creates a new company", async () => {
+    // Add company data when send a POST request to create a new company
     const response = await request(app).post('/companies').send({code: "testcompany2", name: 'TestCompany2', description: "This is test company 2" });
 
     expect(response.statusCode).toEqual(201);

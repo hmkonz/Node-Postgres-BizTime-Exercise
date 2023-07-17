@@ -39,7 +39,7 @@ afterAll(async function () {
   await db.end();
 });
 
-/** GET /invoices - returns `{invoices: [invoice, ...]}` */
+/** GET /invoices - returns `{invoices: [{id, comp_code]}}`  */
 describe("GET /invoices", function () {
   test("Gets a list of 1 invoice", async function () {
     const response = await request(app).get(`/invoices`);
@@ -49,41 +49,35 @@ describe("GET /invoices", function () {
   });
 });
 
-
-
 /** GET /invoices/[id] - return data about a specific invoice: `{invoice: invoice}` */
 describe("GET /invoices/:id", () => {
   test("Gets a specific invoice", async () => {
     const response = await request(app).get(`/invoices/${testInvoice.id}`);
+    // create a company to be added to invoice
     const company = { code: "testCompany", name: "TestCompany", description: "This is a test company"};
 
-    
-    const date = new Date();
-    const add_date =  date.toISOString();  
-    // console.log('This is add_date:', add_date);
-    delete response.body.add_date;
+    // remove add_date from response.body since it's too hard to compare the exact datetime stamps in the response and test invoice objects
+    delete response.body.invoice.add_date;
+    // add company as a property of invoice
     const expectedInvoice = {...invoice, company};
-    console.log('This is expectedInvoice:', expectedInvoice);
-    console.log('This is response.body:', response.body);
-
+    
     expect(response.statusCode).toEqual(200);
-
     expect(response.body).toEqual({invoice: expectedInvoice});
-    // expect(response)
+    
   });
  }); 
 
 /** POST /invoices - create invoice from data; return '{invoice: invoice}' */
 describe ("POST /invoices", () => {
-  // let today = new Date();
-  // console.log('This is today:', today.setHours(0,0,0,0));
   test("Creates a new invoice", async () => {
     const response = await request(app).post('/invoices').send({comp_code: "testCompany", amt: 250});
+
+    // remove add_date from response.body since it's too hard to compare the exact datetime stamps in the response and test invoice objects
+    delete response.body.invoice.add_date;
   
     expect(response.statusCode).toEqual(201);
-    // expect(response.body).toEqual({invoice: {id: expect.any(Number), comp_code: "testcompany", amt: 250, paid: false, add_date: "2023-07-17T06:00:00.000Z",
-    // paid_date: null}
-    // });
+    expect(response.body).toEqual({invoice: {id: expect.any(Number), comp_code: "testCompany", amt: 250, paid: false, paid_date: null}
+    });
   });
 });
 
@@ -91,10 +85,12 @@ describe ("POST /invoices", () => {
 describe ("PUT /invoices/:id", () => {
   test("Updates a specific invoice", async () => {
     const response = await request(app).put(`/invoices/${testInvoice.id}`).send({amt: 200, paid: false});
+
+    // remove add_date from response.body since it's too hard to compare the exact datetime stamps in the response and test invoice objects
+    delete response.body.invoice.add_date;
    
     expect(response.statusCode).toEqual(200);
-    expect(response.body).toEqual({invoice: {id: expect.any(Number), comp_code: "testCompany", amt: 200, paid: false, add_date: '2023-07-17T06:00:00.000Z',
-    paid_date: null}
+    expect(response.body).toEqual({invoice: {id: expect.any(Number), comp_code: "testCompany", amt: 200, paid: false, paid_date: null}
     });
   });
 });
