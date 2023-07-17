@@ -12,21 +12,21 @@ const db = require("../db");
  * */
 router.get("/", async (req, res, next) => {
   try {
-    const results = await db.query(`SELECT id, comp_code, amt, paid, paid_date FROM invoices`);
+    const results = await db.query(`SELECT id, comp_code FROM invoices`);
+   
     // results.rows =
     // [
-    //   { id: 4, comp_code: 'ibm' },
-    //   { id: 11, comp_code: 'apple' },
-    //   { id: 13, comp_code: 'apple' },
-    //   { id: 15, comp_code: 'ibm' }
+      // { id: 1, comp_code: 'apple', amt: 100, paid: false, paid_date: null },
+      // { id: 2, comp_code: 'apple', amt: 200, paid: false, paid_date: null },
+      // {id: 3, comp_code: 'apple',  amt: 300, paid: true, paid_date: 2018-01-01T07:00:00.000Z},
+      // { id: 4, comp_code: 'ibm', amt: 400, paid: false, paid_date: null }
     // ]
+
     return res.json({ invoices: results.rows });
   } catch (err) {
     return next(err);
   }
 });
-
-
 
 /** GET /[id] => detail on invoice
  *
@@ -40,15 +40,16 @@ router.get("/", async (req, res, next) => {
  * */
 router.get("/:id", async (req, res, next) => {
   try {
-    // set the id (i.e. 4) found as a parameter in the url (i.e. '/invoices/4') to the variable id
+    // set the id (i.e. 4) found as a parameter in the url (i.e. '/invoices/4') to the variable 'id'
+
     const { id } = req.params;
     const results = await db.query(
       `SELECT id, 
-                comp_code,
                 amt, 
                 paid, 
                 add_date, 
                 paid_date,
+                companies.code,
                 companies.name,
                 companies.description 
         FROM invoices
@@ -80,29 +81,38 @@ router.get("/:id", async (req, res, next) => {
       amt: data.amt,
       paid: data.paid,
       add_date: data.add_date,
-      paid_date: data.paid_date,
-      company: {
-        code: data.comp_code,
-        name: data.name,
-        description: data.description,
-      },
-    };
+      paid_date: data.paid_date
+      };
+      
+    const company = {
+      code: data.code,
+      name: data.name,
+      description: data.description,
+      };
 
-    // invoice =
+
+    invoice.company = company;  
+    // Adds the company object as a property of the invoice object so it becomes a nested object within invoice in this format:
     // {
-    //     id: 11,
-    //     amt: 100,
-    //     paid: false,
-    //     add_date: 2023-07-10T06:00:00.000Z,
-    //     paid_date: null,
-    //     company: { code: 'apple', name: 'apple', description: 'Maker of OSX.' }
-    //  }
+    //   "invoice": {
+      //   "id": 2,
+      //   "amt": 200,
+      //   "paid": false,
+      //   "add_date": "2023-07-14T06:00:00.000Z",
+      //   "paid_date": null,
+      //   "company": {
+          //   "code": "apple",
+          //   "name": "Apple Computer",
+          //   "description": "Maker of OSX"
+    //   }
+  //   }
+ 
+    return res.json({invoice: invoice});
+    } catch (err) {
+      return next(err);
+    }
+    });
 
-    return res.json({ invoice: invoice });
-  } catch (err) {
-    return next(err);
-  }
-});
 
 /** POST / => add new invoice
  *

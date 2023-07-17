@@ -9,6 +9,17 @@ CREATE TABLE companies (
     description text
 );
 
+CREATE TABLE industries (
+    code TEXT PRIMARY KEY,
+    industry TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE companies_industries (
+    comp_code TEXT NOT NULL REFERENCES companies ON DELETE CASCADE,
+    industries_code TEXT NOT NULL REFERENCES industries ON DELETE CASCADE,
+    PRIMARY KEY (comp_code, industries_code)
+);
+
 CREATE TABLE invoices (
     id serial PRIMARY KEY,
     comp_code text NOT NULL REFERENCES companies ON DELETE CASCADE,
@@ -18,6 +29,7 @@ CREATE TABLE invoices (
     paid_date date,
     CONSTRAINT invoices_amt_check CHECK ((amt > (0)::double precision))
 );
+
 
 INSERT INTO companies
   VALUES ('apple', 'Apple Computer', 'Maker of OSX.'),

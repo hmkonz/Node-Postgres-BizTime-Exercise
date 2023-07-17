@@ -1,4 +1,5 @@
 const express = require("express");
+const slugify = require("slugify");
 const router = express.Router();
 const ExpressError = require("../expressError");
 const db = require("../db");
@@ -12,7 +13,7 @@ const db = require("../db");
  * */
 router.get("/", async (req, res, next) => {
   try {
-    const results = await db.query(`SELECT code, name, description FROM companies`);
+    const results = await db.query(`SELECT code, name FROM companies`);
     // results.rows = [ { code: 'ibm', name: 'IBM' }, { code: 'apple', name: 'apple' } ]
     return res.json({ companies: results.rows });
   } catch (err) {
@@ -57,7 +58,7 @@ router.get("/:code", async (req, res, next) => {
       return invoice.id;
     });
   
-    return res.json(company);
+    return res.json({company: company});
   } catch (err) {
     return next(err);
   }
@@ -183,7 +184,8 @@ router.get("/:code", async (req, res, next) => {
 router.post("/", async (req, res, next) => {
   try {
     // set the code, name and description found as content of the request.body to 'code', 'name' and 'description'
-    const { code, name, description } = req.body;
+    const { name, description } = req.body;
+    const code = slugify(name, {lower: true});
 
     const results = await db.query(
       `INSERT INTO companies (code, name, description)

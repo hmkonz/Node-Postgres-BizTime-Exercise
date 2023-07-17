@@ -8,26 +8,22 @@ const db = require("../db");
 
 let testInvoice;
 
-
-
-
-// create a company before we run each test that we know will be there
+// create a company and invoice before we run each test that we know will be there
 beforeEach(async function () {
-  let res = await db.query(
+  await db.query(
     `INSERT INTO
     companies (code, name, description)
-    VALUES ('testCompany', 'Test Company', 'This is a test company')`
+    VALUES ('testCompany', 'TestCompany', 'This is a test company')`
     );
     
     let result = await db.query(
     `INSERT INTO
     invoices (comp_code, amt, paid, paid_date)
     VALUES ('testCompany', 1000, false, null)
-    RETURNING id, amt, paid, add_date, paid_date`
+    RETURNING id, amt, paid, paid_date`
     );
-    
-    testInvoice = result.rows[0];
-   
+  invoice = result.rows[0];
+  testInvoice = {...result.rows[0], comp_code: "testCompany"};
 });
 
 
@@ -47,21 +43,69 @@ afterAll(async function () {
 describe("GET /invoices", function () {
   test("Gets a list of 1 invoice", async function () {
     const response = await request(app).get(`/invoices`);
+
     expect(response.statusCode).toBe(200);
-    expect(response.body).toEqual({invoices: [testInvoice] })
+    expect(response.body).toEqual({invoices: [{id: testInvoice.id, comp_code: testInvoice.comp_code}] })
   });
 });
 
-/** GET /invoices/[id] - return data about one invoice: `{invoice: invoice}` */
+
+
+/** GET /invoices/[id] - return data about a specific invoice: `{invoice: invoice}` */
 describe("GET /invoices/:id", () => {
-  test("Gets a single invoice", async () => {
+  test("Gets a specific invoice", async () => {
     const response = await request(app).get(`/invoices/${testInvoice.id}`);
-    let company = response.body.invoice.company;
-    console.log(response.body);
-    console.log({invoice: testInvoice, company: company});
+    const company = { code: "testCompany", name: "TestCompany", description: "This is a test company"};
+    const date = new Date();
+    const add_date =  date.toISOString();  
+    console.log('This is add_date:', add_date);
+    
+    const expectedInvoice = {...invoice, add_date, company};
+    console.log('This is expectedInvoice:', expectedInvoice);
+    console.log('This is response.body:', response.body);
+
     expect(response.statusCode).toEqual(200);
-    expect(response.body).toEqual({invoice: testInvoice});
+    expect(response.body).toEqual({invoice: expectedInvoice});
+  });
+ }); 
+
+/** POST /invoices - create invoice from data; return '{invoice: invoice}' */
+describe ("POST /invoices", () => {
+  // let today = new Date();
+  // console.log('This is today:', today.setHours(0,0,0,0));
+  test("Creates a new invoice", async () => {
+    const response = await request(app).post('/invoices').send({comp_code: "testCompany", amt: 250});
+  
+    expect(response.statusCode).toEqual(201);
+    // expect(response.body).toEqual({invoice: {id: expect.any(Number), comp_code: "testcompany", amt: 250, paid: false, add_date: "2023-07-17T06:00:00.000Z",
+    // paid_date: null}
+    // });
   });
 });
+
+/* PUT /invoices/[id] - update invoice; return '{invoice: invoice}' */
+describe ("PUT /invoices/:id", () => {
+  test("Updates a specific invoice", async () => {
+    const response = await request(app).put(`/invoices/${testInvoice.id}`).send({amt: 200, paid: false});
+   
+    expect(response.statusCode).toEqual(200);
+    expect(response.body).toEqual({invoice: {id: expect.any(Number), comp_code: "testCompany", amt: 200, paid: false, add_date: '2023-07-17T06:00:00.000Z',
+    paid_date: null}
+    });
+  });
+});
+
+/* DELETE /invoices/[id] - delete invoice
+ * return '{status: 'deleted'} */
+describe ("DELETE /invoices/:id", () => {
+  test("Deletes a specific invoice", async () => {
+    const response = await request(app).delete(`/invoices/${testInvoice.id}`);
+    
+    expect(response.statusCode).toEqual(200); 
+    expect(response.body).toEqual({ status: "deleted" });
+  });
+});
+
+
 
 
