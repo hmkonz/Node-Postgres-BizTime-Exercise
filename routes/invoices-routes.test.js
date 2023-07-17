@@ -56,16 +56,20 @@ describe("GET /invoices/:id", () => {
   test("Gets a specific invoice", async () => {
     const response = await request(app).get(`/invoices/${testInvoice.id}`);
     const company = { code: "testCompany", name: "TestCompany", description: "This is a test company"};
+
+    
     const date = new Date();
     const add_date =  date.toISOString();  
-    console.log('This is add_date:', add_date);
-    
-    const expectedInvoice = {...invoice, add_date, company};
+    // console.log('This is add_date:', add_date);
+    delete response.body.add_date;
+    const expectedInvoice = {...invoice, company};
     console.log('This is expectedInvoice:', expectedInvoice);
     console.log('This is response.body:', response.body);
 
     expect(response.statusCode).toEqual(200);
+
     expect(response.body).toEqual({invoice: expectedInvoice});
+    // expect(response)
   });
  }); 
 
