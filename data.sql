@@ -1,7 +1,9 @@
 \c biztime
 
 DROP TABLE IF EXISTS invoices;
+DROP TABLE IF EXISTS industries;
 DROP TABLE IF EXISTS companies;
+DROP TABLE IF EXISTS companies_industries;
 
 CREATE TABLE companies (
     code text PRIMARY KEY,
@@ -11,7 +13,7 @@ CREATE TABLE companies (
 
 CREATE TABLE industries (
     code TEXT PRIMARY KEY,
-    industry TEXT NOT NULL UNIQUE
+    industry_name TEXT NOT NULL UNIQUE
 );
 
 CREATE TABLE companies_industries (
@@ -42,6 +44,17 @@ INSERT INTO invoices (comp_Code, amt, paid, paid_date)
          ('ibm', 400, false, null);
 
 INSERT INTO industries
-  VALUES ("acct", "Accouting"),
-         ("eng", "Engineering"),
-         ("medSupply", "Medical Supplies");
+  VALUES ('it', 'Information Technology'),
+         ('eng', 'Engineering'),
+         ('electronics', 'Consumer Electronics'),
+         ('ss', 'Software Services');
+
+INSERT INTO companies_industries 
+   VALUES ('apple', 'electronics'),
+          ('apple', 'ss'),
+          ('ibm', 'it'),
+          ('apple', 'it'),
+          ('ibm', 'electronics'),
+          ('apple', 'eng'),
+          ('ibm', 'eng');
+

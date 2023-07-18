@@ -4,6 +4,7 @@ const router = express.Router();
 const ExpressError = require("../expressError");
 const db = require("../db");
 
+
 // // will actually be "/companies" in app.js file when use these routes
 
 /** GET / => list of companies.
@@ -43,6 +44,17 @@ router.get("/:code", async (req, res, next) => {
       [code]
     );
 
+    // select the industry of the company with a specific code (i.e. apple)
+    const industryResults = await db.query(
+        `SELECT c.name, i.industry_name 
+        FROM companies as c
+        LEFT JOIN companies_industries as ci
+        ON c.code=ci.comp_code
+        LEFT JOIN industries as i
+        ON ci.industries_code=i.code
+        WHERE c.code=$1`, [req.params.code]
+    );
+
     if (companyResults.rows.length === 0) {
       throw new ExpressError(`Can't find company with code of ${code}`, 404);
     }
@@ -53,12 +65,43 @@ router.get("/:code", async (req, res, next) => {
     const invoices = invoiceResults.rows;
     // invoices = [ { id: 11 }, { id: 13 }, { id: 21 } ]
 
-    // interate over the array 'invoices' using 'map' to get an array of invoice ids (invoice.id). company.invoices = [ 11, 13, 21 ]
+    // interate over the array 'invoices' using 'map' to get an array of invoice ids (invoice.id). company.invoices = [ 11, 13, 21 ] and set that to the invoice property on company 
     company.invoices = invoices.map((invoice) => {
       return invoice.id;
     });
-  
+
+    const industry = industryResults.rows;
+    // i.e. for code = apple, 
+    // industry = [
+        // { name: 'Apple Computer', industry_name: 'Consumer Electronics' },
+        // { name: 'Apple Computer', industry_name: 'Software Services' },
+        // { name: 'Apple Computer', industry_name: 'Information Technology' },
+        // { name: 'Apple Computer', industry_name: 'Engineering' }
+        // ]
+
+
+    // interate over the array of objects 'industry' using 'map' to get an array of only industry names (industry.industry_name) and set that array equal to the industry property on company.
+    company.industry = industry.map((row) => {
+        return row.industry_name
+    });
+  // company.industry = ['Consumer Electronics','Software Services','Information Technology', 'Engineering']  
+
+// {
+  // company: {
+      //   code: 'apple',
+      //   name: 'Apple Computer',
+      //   description: 'Maker of OSX.',
+      //   invoices: [ 1, 2, 3 ],
+      //   industry: [
+        //     'Consumer Electronics',
+        //     'Software Services',
+        //     'Information Technology',
+        //     'Engineering'
+      //   ]
+   // }
+//  }
     return res.json({company: company});
+    
   } catch (err) {
     return next(err);
   }
