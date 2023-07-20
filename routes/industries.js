@@ -158,45 +158,91 @@ router.post("/", async (req, res, next) => {
 
 
 
-// will actually be "/industries/:code/companies" in app.js file when use these routes
+// will actually be "/industries/:industryCode/companies" in app.js file when use these routes
 
-/** POST/ => gets list of companies associated with a particular industry code and returns
- *
- * =>  { message: 'Company associated with industry successfully' }
+/** POST/ => insert a companycode (i.e. "apple") for an specific industry code in the query string (i.e. "HR") into the companies_industries table
+ *  
+ * (i.e. POST http://localhost:3000/industries/HR/companies in insomnia):
+ *    {
+ *     "companyCode": "apple"
+ *  	}
+ * 
+ * => // {
+      //   "industry": {
+      //     "comp_code": "apple",
+      //     "industries_code": "HR"
+      //   }
+      // }
  *
  * */
 
 // Route to associate an industry with a company
-router.post('/industries/:code/companies', async (req, res, next) => {
+router.post('/:industryCode/companies', async (req, res, next) => {
   try {
-    const { industryCode } = req.params; // Industry code from the URL
-    const { companyCode } = req.body; // Company code from the request body
-    console.log(industryCode);
-    console.log(companyCode);
+    const { industryCode } = req.params; // Industry code from the URL i.e. HR
+    const { companyCode } = req.body; // Company code from the request body 
+    // added in insomnia:
+    // i.e.  {
+          // "companyCode": "apple"
+     	    // }
 
+    // get the code and industry_name of all industries in the industries table
     const industriesResults = await db.query(`SELECT code, industry_name FROM industries`);
     const industries = industriesResults.rows;
-    console.log('This is industries', industries);
-
+    // This is industries:
+    //  [
+      //   { code: 'it', industry_name: 'Information Technology' },
+      //   { code: 'eng', industry_name: 'Engineering' },
+      //   { code: 'electronics', industry_name: 'Consumer Electronics' },
+      //   { code: 'ss', industry_name: 'Software Services' },
+      //   { code: 'acct', industry_name: 'Accounting' },
+      //   { code: 'HR', industry_name: 'Human Resources' },
+      //   { code: 'fas', industry_name: 'fashion' }
+      // ]
+    
+    // get the code of all companies in the companies table
     const companiesResults = await db.query(`SELECT code FROM companies`);
     const companies = companiesResults.rows;
-    console.log('This is companies', companies);
+    // This is companies: [ { code: 'apple' }, { code: 'ibm' } ]
 
-    // Find the industry with the specified code entered in the URL
-    const industry = industries.find(industry => industry.code === industryCode); 
-    console.log('This is industry', industry);
-
-    if (!industry) { return res.status(404).json({ error: 'Industry not found' }); } 
+    // Find the industry with the specified code entered in the URL ("HR")
+    const industry = industries.find(industry => industry.code === industryCode);
+    // This is industry: { code: 'HR', industry_name: 'Human Resources' } 
+   
+    // if industry with code entered in the URL cannot be found in the industries table, return an error
+    if (!industry) { return res.status(404).json({ error: `Industry ${industryCode} not found` }); } 
     
-    // Find the company with the code found in req.body (companyCode)
+    // Find the company with the code found in req.body (i.e. "companyCode": "apple")
+    // {
+      // 	"companyCode": "apple"
+    // }
     const company = companies.find(company => company.code === companyCode); 
-    console.log("This is company", company);
+    // This is company { code: 'apple' }
 
-    if (!company) { return res.status(404).json({ error: 'Company not found' }); } 
+    // if company with companyCode entered in the request body cannot be found in the companies table (i.e. "companyCode": "qwerty" ), return an error
+    if (!company) { return res.status(404).json({ error: `Company not found` }); } 
     
-    // Associate the company with the industry 
-    industry.companies.push(companyCode); 
-    return res.json({ message: 'Company associated with industry successfully' });
+    // Insert a row into the companies_industries table with industryCode found in the URL (i.e. "acct") and companyCode found in the body of the request (i.e. "apple")
+    const results = await db.query(
+      `INSERT INTO companies_industries (comp_code, industries_code)
+       VALUES ($1, $2)
+       RETURNING comp_code, industries_code`,
+      [industryCode, companyCode]
+    );
+ 
+    // results.rows[0] = { comp_code: 'apple', industries_code: 'HR' }
+    // industry: results.rows[0] = 
+      // {
+      //   "industry": {
+      //     "comp_code": "apple",
+      //     "industries_code": "HR"
+      //   }
+      // }
+    return res.json({ industry: results.rows[0] });
+ 
+    
+     
+  
    
     
 
